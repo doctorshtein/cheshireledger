@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html  lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase.js"></script>
+    <script>
+        // Initialize Firebase
+        var config = {
+            apiKey: "AIzaSyA46BNuB_FjDCPtIHfdxZsExeGUWaHr14k",
+            authDomain: "cheshireledger.firebaseapp.com",
+            databaseURL: "https://cheshireledger.firebaseio.com",
+            projectId: "cheshireledger",
+            storageBucket: "cheshireledger.appspot.com",
+            messagingSenderId: "299512942240"
+        };
+        var app = firebase.initializeApp(config);
+        var db = firebase.firestore(app);
+        const settings = { timestampsInSnapshots: true };
+        db.settings(settings);
+
+        var userData;
+    </script>
+
+    <script src="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.css" />
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <script>
+        firebase.auth().onAuthStateChanged(function (user) {
+            if (user) {
+                document.getElementById('firebaseui-auth-container').style.display = 'none';
+                loadUserDataAsync(db, user.uid)
+                    .then(function (data) {
+                        userData = data;
+
+                        document.getElementById('loader-ui').style.display = 'none';
+                        displayParties(userData.parties);
+                        displayLedgers(userData.ledgers);
+                    });
+            } else {
+                var ui = new firebaseui.auth.AuthUI(firebase.auth());
+                ui.start('#firebaseui-auth-container', {
+                    callbacks: {
+                        signInSuccessWithAuthResult:
+                            function (authResult, redirectUrl) {
+                                // User successfully signed in.
+                                // Return type determines whether we continue the redirect automatically
+                                // or whether we leave that to developer to handle.
+                                return true;
+                            },
+                        uiShown: function () {
+                            // The widget is rendered.
+                            // Hide the loader.
+                            document.getElementById('loader-ui').style.display = 'none';
+                        }
+                    },
+                    // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
+                    signInFlow: 'popup',
+                    signInSuccessUrl: 'index.html',
+                    signInOptions: [
+                        firebase.auth.GoogleAuthProvider.PROVIDER_ID
+                    ],
+                    // Terms of service url.
+                    tosUrl: '<your-tos-url>',
+                    // Privacy policy url.
+                    privacyPolicyUrl: '<your-privacy-policy-url>'
+                });
+            }
+        });
+
+    </script>
+
+    <script src="mycode.js"></script>
+</head>
+<body>
+
+
+    <div class="jumbotron text-center">
+        <h1>Cheshire Shared Ledger</h1>
+        <p>Keep track of shared expenses!</p>
+    </div>
+
+    <div class="container">
+        <div class="row" id="loader-ui">
+            <div class="col-sm-12">
+                <h3>Loading ...</h3>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div id="firebaseui-auth-container"></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-4">
+
+                <div class="panel-group">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">My Parties</h4>
+                        </div>
+                        <div class="panel-collapse">
+                            <template id="party-template">
+                                <li class="list-group-item">party-name</li>
+                            </template>
+                            <ul class="list-group" id="parties-holder"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="panel-group">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">My Ledgers</h4>
+                        </div>
+                        <div class="panel-collapse">
+                            <template id="ledger-template">
+                                <a href="#" class="list-group-item">First item</a>
+                            </template>
+                            <div class="list-group" id="ledgers-holder">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+
+                <div class="panel-group">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">Ledger Balances</h4>
+                        </div>
+                        <div class="panel-collapse">
+                            <table class="table table-hover">
+                                <template id="balance-template">
+                                    <tr>
+                                        <td>John</td>
+                                        <td>john@example.com</td>
+                                    </tr>
+                                </template>
+                                <tbody id="balances-holder"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <p><button type="button" class="btn btn-primary btn-block disabled">Add transaction</button></p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
